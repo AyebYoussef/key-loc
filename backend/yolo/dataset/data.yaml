@@ -1,0 +1,22 @@
+# Chemin absolu vers le dossier dataset (à adapter)
+path: ./dataset
+
+train: images/train
+val:   images/val
+
+# Nombre de classes = nombre de modèles de clés distincts
+nc: 10
+
+# Labels — doivent correspondre exactement aux champs yolo_label en base
+names:
+  0: SX9
+  1: SX10
+  2: EU6P
+  3: TE2
+  4: JU3
+  5: Y1
+  6: RR50
+  7: JM1
+  8: KL5
+  9: LI2
+

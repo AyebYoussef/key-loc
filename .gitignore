@@ -1,0 +1,28 @@
+# Python / Venv
+venv/
+__pycache__/
+*.py[cod]
+*$py.class
+*.env
+uploads/
+yolo/weights/
+.pytest_cache/
+
+# Node / Angular
+node_modules/
+dist/
+.angular/
+
+# Android / Gradle
+mobile/.gradle/
+mobile/build/
+mobile/app/build/
+mobile/local.properties
+mobile/*.iml
+mobile/.idea/
+
+# OS / IDE
+.DS_Store
+Thumbs.db
+.vscode/
+
