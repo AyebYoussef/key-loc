@@ -58,6 +58,28 @@ class SimulatedLedGuidanceService(LedGuidanceService):
             db.add(etat)
         db.commit()
 
+        # Notification directe optionnelle vers l'ESP8266 si configuré
+        from app.core.config import settings
+        from app.models.casier import Casier
+        if getattr(settings, "ESP8266_IP", None):
+            casier = db.query(Casier).filter(Casier.id == casier_id).first()
+            if casier and casier.esp_pin:
+                self._notifier_esp8266(settings.ESP8266_IP, casier.code, casier.esp_pin, duree_secondes)
+
+    @staticmethod
+    def _notifier_esp8266(ip: str, code: str, pin: str, duree: int):
+        import threading
+        import urllib.request
+
+        def _send():
+            try:
+                url = f"http://{ip}/blink?casier={code}&pin={pin}&duration={duree}"
+                urllib.request.urlopen(url, timeout=0.8)
+            except Exception:
+                pass  # L'ESP8266 utilise également le polling comme mécanisme principal
+
+        threading.Thread(target=_send, daemon=True).start()
+
     def eteindre_casier(self, casier_id: int, db: Session) -> None:
         etat = db.query(EtatLed).filter(EtatLed.casier_id == casier_id).first()
         if etat:

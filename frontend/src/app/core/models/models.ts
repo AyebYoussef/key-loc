@@ -41,6 +41,7 @@ export interface Casier {
   colonne: number;
   description?: string;
   led_index?: number;
+  esp_pin?: string;
   esp32_id?: string;
   esp32_statut: 'en_ligne' | 'hors_ligne';
   actif: boolean;

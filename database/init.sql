@@ -83,6 +83,7 @@ CREATE TABLE IF NOT EXISTS casiers (
     ligne         TINYINT NOT NULL,             -- position ligne (1-based)
     colonne       TINYINT NOT NULL,             -- position colonne (1-based)
     led_index     SMALLINT DEFAULT NULL,        -- [V2] index LED sur le panneau
+    esp_pin       VARCHAR(10) DEFAULT NULL,     -- Pin ESP8266 (ex: 'D3', 'D4', 'D5')
     esp32_id      VARCHAR(50) DEFAULT NULL,     -- [V2] identifiant de l'ESP32 pilotant ce casier
     esp32_statut  ENUM('en_ligne','hors_ligne') DEFAULT 'hors_ligne', -- [V2]
     description   VARCHAR(255),
@@ -232,44 +233,21 @@ INSERT INTO equivalences (modele_source_id, modele_equiv_id, note) VALUES
 (2, 6, 'SX10 (Silca) équivalent à Y1 (Yale) - version renforcée'),
 (3, 7, 'EU6P (Silca) équivalent à RR50 (Errebi) - profil radial');
 
--- Casiers (grille 4 lignes x 5 colonnes = 20 casiers)
-INSERT INTO casiers (code, ligne, colonne, led_index, description) VALUES
-('A1', 1, 1, 0,  'Rangée A, colonne 1'),
-('A2', 1, 2, 1,  'Rangée A, colonne 2'),
-('A3', 1, 3, 2,  'Rangée A, colonne 3'),
-('A4', 1, 4, 3,  'Rangée A, colonne 4'),
-('A5', 1, 5, 4,  'Rangée A, colonne 5'),
-('B1', 2, 1, 5,  'Rangée B, colonne 1'),
-('B2', 2, 2, 6,  'Rangée B, colonne 2'),
-('B3', 2, 3, 7,  'Rangée B, colonne 3'),
-('B4', 2, 4, 8,  'Rangée B, colonne 4'),
-('B5', 2, 5, 9,  'Rangée B, colonne 5'),
-('C1', 3, 1, 10, 'Rangée C, colonne 1'),
-('C2', 3, 2, 11, 'Rangée C, colonne 2'),
-('C3', 3, 3, 12, 'Rangée C, colonne 3'),
-('C4', 3, 4, 13, 'Rangée C, colonne 4'),
-('C5', 3, 5, 14, 'Rangée C, colonne 5'),
-('D1', 4, 1, 15, 'Rangée D, colonne 1'),
-('D2', 4, 2, 16, 'Rangée D, colonne 2'),
-('D3', 4, 3, 17, 'Rangée D, colonne 3'),
-('D4', 4, 4, 18, 'Rangée D, colonne 4'),
-('D5', 4, 5, 19, 'Rangée D, colonne 5');
+-- Casiers (grille 5 casiers : A1 à A5 avec intégration ESP8266)
+INSERT INTO casiers (id, code, ligne, colonne, led_index, esp_pin, description) VALUES
+(1, 'A1', 1, 1, 0, 'D3',  'Casier A1 — LED Pin D3 (UE 11R)'),
+(2, 'A2', 1, 2, 1, 'D4',  'Casier A2 — LED Pin D4 (C8 208 / C8 206)'),
+(3, 'A3', 1, 3, 2, 'D5',  'Casier A3 — LED Pin D5 (UG 5D)'),
+(4, 'A4', 1, 4, 3, NULL,  'Casier A4 — (SX9)'),
+(5, 'A5', 1, 5, 4, NULL,  'Casier A5 — (EU6P)');
 
--- Ébauches (stock initial)
-INSERT INTO ebauches (modele_id, casier_id, classe_yolo, quantite, seuil_alerte, quantite_min) VALUES
-(1,  1,  'SX9',  25, 5, 2),   -- SX9    -> A1
-(2,  2,  'SX10', 18, 5, 2),   -- SX10   -> A2
-(3,  3,  'EU6P', 30, 5, 2),   -- EU6P   -> A3
-(4,  4,  'TE2',  12, 5, 2),   -- TE2    -> A4
-(5,  5,  'JU3',   4, 5, 2),   -- JU3    -> A5 (alerte !)
-(6,  6,  'Y1',   22, 5, 2),   -- Y1     -> B1
-(7,  7,  'RR50',  2, 5, 2),   -- RR50   -> B2 (critique !)
-(8,  8,  'JM1',  15, 5, 2),   -- JM1    -> B3
-(9,  9,  'KL5',   0, 5, 2),   -- KL5    -> B4 (épuisé !)
-(10, 10, 'LI2',   8, 5, 2),   -- LI2    -> B5
-(11, 11, 'C8 208', 25, 5, 2), -- C8 208 -> C1
-(12, 12, 'UE 11R', 20, 5, 2), -- UE 11R -> C2
-(13, 13, 'UG 5D',  15, 5, 2); -- UG 5D  -> C3
+-- Ébauches (stock initial dans A1 à A5)
+INSERT INTO ebauches (id, modele_id, casier_id, classe_yolo, quantite, seuil_alerte, quantite_min) VALUES
+(1, 12, 1, 'UE 11R', 25, 5, 2), -- UE 11R -> A1 (Pin D3)
+(2, 11, 2, 'C8 208', 20, 5, 2), -- C8 208 -> A2 (Pin D4)
+(3, 13, 3, 'UG 5D',  18, 5, 2), -- UG 5D  -> A3 (Pin D5)
+(4, 1,  4, 'SX9',    15, 5, 2), -- SX9    -> A4
+(5, 3,  5, 'EU6P',   12, 5, 2); -- EU6P   -> A5
 
 -- États LED (initialisés à éteint)
 INSERT INTO etats_led (casier_id, actif, expire_a)
@@ -278,7 +256,7 @@ SELECT id, FALSE, NULL FROM casiers;
 -- Configurations
 INSERT INTO configurations (cle, valeur, description) VALUES
 ('yolo_seuil_confiance', '0.6',         'Seuil minimal de confiance YOLO pour accepter une détection'),
-('led_duree_secondes',   '15',          'Durée d''allumage du guidage lumineux en secondes'),
+('led_duree_secondes',   '10',          'Durée d''allumage du guidage lumineux en secondes (10s)'),
 ('led_mode',             'simulated',   'Mode LED : simulated (V1) ou mqtt (V2)'),
 ('app_nom',              'KeyLocator',  'Nom de l''application'),
 ('app_version',          '1.0.0',       'Version courante');

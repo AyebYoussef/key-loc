@@ -20,6 +20,7 @@ class Casier(Base):
     colonne = Column(SmallInteger, nullable=False)
     # [V2] Champs IoT — déjà prévus, non utilisés en V1
     led_index = Column(SmallInteger, default=None)
+    esp_pin = Column(String(10), default=None)  # Pin physique ESP8266 (ex: 'D3', 'D4', 'D5')
     esp32_id = Column(String(50), default=None)
     esp32_statut = Column(Enum("en_ligne", "hors_ligne"), default="hors_ligne")
     description = Column(String(255))

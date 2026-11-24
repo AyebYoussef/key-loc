@@ -202,7 +202,7 @@ import { ScanResultat } from '../../core/models/models';
               <div class="g-icon">💡</div>
               <div class="g-info">
                 <h4>Guidage Lumineux Activé</h4>
-                <p>Le casier <strong>{{ resultat.casier.code }}</strong> clignote pendant 15 secondes pour repérage visuel.</p>
+                <p>Le casier <strong>{{ resultat.casier.code }}</strong> clignote pendant 10 secondes sur la LED physique ESP8266 et la grille.</p>
               </div>
             </div>
 

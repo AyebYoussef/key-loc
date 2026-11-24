@@ -13,15 +13,15 @@ import { interval, Subscription } from 'rxjs';
       <div class="page-header">
         <div>
           <h1>Grille des Casiers & Guidage Lumineux</h1>
-          <p class="subtitle">Simulation virtuelle du panneau de LED (WS2812B) — Emplacement et clés stockées par casier</p>
+          <p class="subtitle">Casiers A1 à A5 avec intégration IoT ESP8266 (Pins D3, D4, D5) — Clignotement 10 secondes</p>
         </div>
         <div class="legend">
-          <div class="legend-item"><span class="led-dot active"></span> LED Allumée</div>
+          <div class="legend-item"><span class="led-dot active"></span> LED Clignotante (10s)</div>
           <div class="legend-item"><span class="led-dot inactive"></span> Éteinte</div>
         </div>
       </div>
 
-      <!-- Grille virtuelle 4x5 -->
+      <!-- Grille virtuelle 5 casiers (A1 à A5) -->
       <div class="grid-container">
         <div class="casier-cell" *ngFor="let casier of casiers" [class.allume]="casier.etat_led?.actif">
           <div class="casier-header">
@@ -30,8 +30,8 @@ import { interval, Subscription } from 'rxjs';
           </div>
 
           <div class="casier-body">
-            <span class="pos">Ligne {{ casier.ligne }} · Col {{ casier.colonne }}</span>
-            <span class="led-index" *ngIf="casier.led_index !== null">Index LED: #{{ casier.led_index }}</span>
+            <span class="pos">Position : {{ casier.code }} (Col {{ casier.colonne }})</span>
+            <span class="esp-pin-badge" *ngIf="casier.esp_pin">⚡ ESP8266 Pin: {{ casier.esp_pin }}</span>
 
             <!-- Clé stockée dans ce casier -->
             <div class="ebauche-tag" *ngIf="getEbaucheForCasier(casier.id) as ebauche">
@@ -50,7 +50,7 @@ import { interval, Subscription } from 'rxjs';
           <div class="casier-actions">
             <button class="btn btn-sm" [class.btn-primary]="!casier.etat_led?.actif" [class.btn-danger]="casier.etat_led?.actif"
                     (click)="toggleLed(casier)">
-              {{ casier.etat_led?.actif ? 'Éteindre' : 'Tester LED (15s)' }}
+              {{ casier.etat_led?.actif ? 'Éteindre' : 'Tester LED (10s)' }}
             </button>
           </div>
         </div>
@@ -164,9 +164,18 @@ import { interval, Subscription } from 'rxjs';
         color: var(--text-secondary);
       }
 
-      .led-index {
+      .esp-pin-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+        background: rgba(16, 185, 129, 0.15);
+        color: #10b981;
+        font-weight: 700;
         font-size: 0.75rem;
-        color: var(--text-muted);
+        padding: 0.2rem 0.5rem;
+        border-radius: 4px;
+        border: 1px solid rgba(16, 185, 129, 0.3);
+        width: fit-content;
       }
 
       .ebauche-tag {
@@ -253,7 +262,7 @@ export class CasiersComponent implements OnInit, OnDestroy {
         next: (etat) => casier.etat_led = etat
       });
     } else {
-      this.api.allumerLed(casier.id, 15).subscribe({
+      this.api.allumerLed(casier.id, 10).subscribe({
         next: (etat) => casier.etat_led = etat
       });
     }

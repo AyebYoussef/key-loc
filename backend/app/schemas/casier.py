@@ -16,6 +16,7 @@ class CasierBase(BaseModel):
     description: Optional[str] = None
     # Champs V2 (optionnels)
     led_index: Optional[int] = None
+    esp_pin: Optional[str] = None
     esp32_id: Optional[str] = None
 
 

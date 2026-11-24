@@ -18,9 +18,10 @@ class Settings(BaseSettings):
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60
 
-    # LED
+    # LED & IoT
     LED_MODE: str = "simulated"          # simulated | mqtt
-    LED_DUREE_SECONDES: int = 15
+    LED_DUREE_SECONDES: int = 10
+    ESP8266_IP: str | None = None        # Optionnel : IP de l'ESP8266 (ex: 192.168.1.50) pour push direct
 
     # YOLO & Reconnaissance
     YOLO_MODE: str = "mock"                   # mock | real

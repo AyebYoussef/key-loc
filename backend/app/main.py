@@ -9,7 +9,7 @@ import os
 
 from app.core.config import settings
 from app.core.database import engine, Base
-from app.routers import auth, utilisateurs, modeles, fabricants, casiers, ebauches, scans, stock, alertes, stats, ml
+from app.routers import auth, utilisateurs, modeles, fabricants, casiers, ebauches, scans, stock, alertes, stats, ml, iot
 from app.services.yolo_service import yolo_service
 
 # Création des tables si elles n'existent pas (dev only)
@@ -60,6 +60,7 @@ app.include_router(scans.router,        prefix="/api/scans",        tags=["Scans
 app.include_router(alertes.router,      prefix="/api/alertes",      tags=["Alertes"])
 app.include_router(stats.router,        prefix="/api/stats",        tags=["Statistiques"])
 app.include_router(ml.router,           prefix="/api/ml",           tags=["Dataset ML"])
+app.include_router(iot.router,          prefix="/api/iot",          tags=["IoT & LED"])
 
 
 @app.get("/", tags=["Santé"])
