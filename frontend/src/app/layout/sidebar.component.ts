@@ -1,7 +1,8 @@
-import { Component, EventEmitter, Output } from '@angular/core';
+import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { AuthService } from '../core/services/auth.service';
+import { Utilisateur } from '../core/models/models';
 
 @Component({
   selector: 'app-sidebar',
@@ -39,17 +40,32 @@ import { AuthService } from '../core/services/auth.service';
 
       <div class="user-panel" *ngIf="authService.currentUser$ | async as user">
         <div class="user-info">
-          <span class="avatar">{{ user.prenom[0] }}{{ user.nom[0] }}</span>
+          <span class="avatar">{{ getInitials(user) }}</span>
           <div class="details">
             <span class="name">{{ user.prenom }} {{ user.nom }}</span>
-            <span class="role">{{ user.role.nom }}</span>
+            <span class="role">{{ user.role?.nom }}</span>
           </div>
         </div>
-        <button class="logout-btn" (click)="authService.logout()" title="Déconnexion">🚪</button>
+        <button class="logout-btn" (click)="logout()" title="Se déconnecter" aria-label="Se déconnecter">
+          <span class="logout-icon">🚪</span>
+        </button>
       </div>
     </aside>
   `,
   styles: [`
+    :host {
+      display: block;
+    }
+
+    @media (max-width: 768px) {
+      :host {
+        display: none !important;
+      }
+      .sidebar {
+        display: none !important;
+      }
+    }
+
     .sidebar {
       width: 260px;
       height: 100vh;
@@ -115,11 +131,14 @@ import { AuthService } from '../core/services/auth.service';
         display: flex;
         align-items: center;
         gap: 0.75rem;
+        min-width: 0;
+        overflow: hidden;
       }
 
       .avatar {
         width: 36px;
         height: 36px;
+        min-width: 36px;
         background: var(--primary);
         color: white;
         border-radius: 50%;
@@ -133,22 +152,47 @@ import { AuthService } from '../core/services/auth.service';
       .details {
         display: flex;
         flex-direction: column;
-        .name { font-size: 0.85rem; font-weight: 600; }
+        min-width: 0;
+        overflow: hidden;
+        .name {
+          font-size: 0.85rem;
+          font-weight: 600;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
         .role { font-size: 0.75rem; color: var(--text-muted); text-transform: capitalize; }
       }
 
       .logout-btn {
         background: none;
-        border: none;
+        border: 1px solid transparent;
         font-size: 1.1rem;
         cursor: pointer;
-        padding: 0.4rem;
-        border-radius: 4px;
-        &:hover { background: var(--border-light); }
+        padding: 0.4rem 0.5rem;
+        border-radius: var(--radius-sm, 6px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.15s ease;
+        &:hover {
+          background: var(--danger-bg);
+          border-color: var(--danger);
+        }
       }
     }
   `]
 })
 export class SidebarComponent {
   constructor(public authService: AuthService) {}
+
+  getInitials(user: Utilisateur): string {
+    const p = user?.prenom?.[0] || '';
+    const n = user?.nom?.[0] || '';
+    return (p + n).toUpperCase() || '?';
+  }
+
+  logout(): void {
+    this.authService.logout();
+  }
 }

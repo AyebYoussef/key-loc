@@ -10,7 +10,7 @@ Application de gestion et de localisation d'ébauches de clés pour serrurier.
 | Backend     | Python 3.11+, FastAPI, Pydantic v2, SQLAlchemy, JWT     |
 | IA          | Ultralytics YOLO v8 (mode mock en V1)                   |
 | Base de données | MySQL 8 via XAMPP (phpMyAdmin)                      |
-| Mobile      | Android Kotlin, CameraX, Retrofit, MVVM                 |
+| Mobile & Web | Application Web Responsive (Angular, Camera API, WebRTC) |
 | IoT (V2)    | ESP32, MQTT Mosquitto, LEDs WS2812B                     |
 
 ## Structure du monorepo
@@ -27,8 +27,7 @@ keylocator/
 │   │   └── utils/     # Utilitaires
 │   ├── yolo/          # Dataset, poids, scripts YOLO
 │   └── tests/
-├── frontend/          # Application Angular
-├── mobile/            # Application Android Kotlin
+├── frontend/          # Application Web & Mobile (Angular Responsive)
 ├── database/          # Script SQL d'initialisation
 └── iot/               # (V2) Firmware ESP32, config MQTT
 ```
@@ -39,7 +38,6 @@ keylocator/
 - XAMPP ≥ 8.0 (MySQL + phpMyAdmin)
 - Python ≥ 3.11
 - Node.js ≥ 20 + Angular CLI ≥ 17
-- Android Studio (Hedgehog ou supérieur)
 
 ### 1. Base de données (XAMPP)
 1. Démarrez Apache et MySQL dans XAMPP Control Panel
@@ -58,16 +56,16 @@ uvicorn app.main:app --reload
 API disponible sur : http://localhost:8000  
 Documentation Swagger : http://localhost:8000/docs
 
-### 3. Frontend
+### 3. Application Web & Mobile (Frontend)
 ```bash
 cd frontend
 npm install
-ng serve
+npm start                      # Lance le serveur sur 0.0.0.0:4200
 ```
-Application disponible sur : http://localhost:4200
+- **Sur PC** : Ouvrez `http://localhost:4200`
+- **Sur Mobile** : Ouvrez directement `http://localhost:4200` (émulateur) ou `http://<IP_DU_PC>:4200` dans votre navigateur mobile (Chrome, Safari, etc.) connecté au même réseau.
 
-### 4. Mobile
-Ouvrez le dossier `mobile/` dans Android Studio et lancez l'émulateur.
+La capture photo fonctionne directement depuis le navigateur du smartphone via l'appareil photo ou la caméra en direct.
 
 ## Comptes de test
 

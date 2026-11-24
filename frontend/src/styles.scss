@@ -132,3 +132,10 @@ body {
     box-shadow: var(--shadow-md);
   }
 }
+
+.table-container {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  max-width: 100%;
+}
+

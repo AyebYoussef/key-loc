@@ -1,7 +1,7 @@
 # KeyLocator — Rapport d'Avancement V1
 
 ## ✅ Étape 1 : Arborescence Monorepo & Structure de Fichiers
-- Monorepo structuré avec `backend/`, `frontend/`, `mobile/`, `database/`, `iot/`.
+- Monorepo structuré avec `backend/`, `frontend/`, `database/`, `iot/`.
 - Architecture V2 IoT anticipée dans `iot/README.md`.
 
 ## ✅ Étape 2 : Base de Données MySQL (XAMPP)
@@ -32,9 +32,12 @@
   - **Catalogue** avec recherche manuelle et profils d'équivalences de fabricants
 - Bundle compilé avec succès (`npm run build`).
 
-## ✅ Étape 6 : Application Mobile Kotlin (Android)
-- Architecture **MVVM** (`MainActivity`, `MainViewModel`, `ScanRepository`).
-- Intégration **CameraX** (PreviewView, ImageCapture avec cadre de ciblage).
-- Client **Retrofit / OkHttp** avec envoi multipart de la photo.
-- Gestion des états (Loading, Success avec affichage du casier lumineux, alertes photo floue / erreur).
+## ✅ Étape 6 : Expérience Mobile Unifiée (Web Responsive & Caméra)
+- Remplacement du module Android Kotlin séparé par une **application Web unifiée 100% responsive**.
+- Accès transparent sur PC et Mobile via le lien `localhost:4200` (ou IP locale).
+- Prise en charge native de la capture d'images sur smartphone :
+  - **Flux caméra en direct** (WebRTC / `getUserMedia` avec basculement caméra arrière/avant).
+  - **Photo Smartphone native** (HTML5 `<input capture="environment">`) pour un déclenchement direct de l'appareil photo haute résolution du téléphone sans dépendre de permissions complexes.
+  - **Barre de navigation inférieure ergonomique** (`bottom-nav`) adaptée aux écrans tactiles.
+  - **Affichage des résultats, validation de stock et guidage de casier** entièrement opérationnels sur smartphone comme sur ordinateur.
 

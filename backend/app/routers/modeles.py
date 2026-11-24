@@ -35,7 +35,7 @@ def lister(
 
 
 @router.post("/", response_model=ModeleSchema, status_code=201, summary="Créer un modèle")
-def creer(payload: ModeleCreate, db: Session = Depends(get_db), _=Depends(get_gerant)):
+def creer(payload: ModeleCreate, db: Session = Depends(get_db), _=Depends(get_utilisateur_courant)):
     if db.query(ModeleCle).filter(ModeleCle.reference == payload.reference).first():
         raise HTTPException(status_code=409, detail="Référence déjà existante")
     modele = ModeleCle(**payload.model_dump())

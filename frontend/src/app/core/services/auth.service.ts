@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { Router } from '@angular/router';
 import { BehaviorSubject, Observable, tap } from 'rxjs';
 import { Utilisateur } from '../models/models';
 
@@ -13,11 +14,20 @@ export interface TokenResponse {
   providedIn: 'root'
 })
 export class AuthService {
-  private apiUrl = 'http://localhost:8000/api/auth';
+  private get apiUrl(): string {
+    if (typeof window !== 'undefined' && window.location) {
+      const hostname = window.location.hostname || 'localhost';
+      return `http://${hostname}:8000/api/auth`;
+    }
+    return 'http://localhost:8000/api/auth';
+  }
   private currentUserSubject = new BehaviorSubject<Utilisateur | null>(this.getStoredUser());
   public currentUser$ = this.currentUserSubject.asObservable();
 
-  constructor(private http: HttpClient) {}
+  constructor(
+    private http: HttpClient,
+    private router: Router
+  ) {}
 
   public get currentUserValue(): Utilisateur | null {
     return this.currentUserSubject.value;
@@ -25,6 +35,10 @@ export class AuthService {
 
   public get token(): string | null {
     return localStorage.getItem('token');
+  }
+
+  public get isAuthenticated(): boolean {
+    return !!this.token && !!this.currentUserValue;
   }
 
   public get isGerant(): boolean {
@@ -45,18 +59,19 @@ export class AuthService {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     this.currentUserSubject.next(null);
+    this.router.navigate(['/login']);
   }
 
   private getStoredUser(): Utilisateur | null {
+    const token = localStorage.getItem('token');
     const userStr = localStorage.getItem('user');
-    if (userStr) {
-      try {
-        return JSON.parse(userStr);
-      } catch {
-        return null;
-      }
+    if (!token || !userStr) {
+      return null;
     }
-    return null;
+    try {
+      return JSON.parse(userStr);
+    } catch {
+      return null;
+    }
   }
 }
-

@@ -5,21 +5,17 @@ __pycache__/
 *$py.class
 *.env
 uploads/
+# YOLO
 yolo/weights/
+**/weights/
+*.cache
+yolov8n-cls.pt
 .pytest_cache/
 
 # Node / Angular
 node_modules/
 dist/
 .angular/
-
-# Android / Gradle
-mobile/.gradle/
-mobile/build/
-mobile/app/build/
-mobile/local.properties
-mobile/*.iml
-mobile/.idea/
 
 # OS / IDE
 .DS_Store

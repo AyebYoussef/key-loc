@@ -25,21 +25,47 @@ def tester_inference(image_path: str, model_path: str, seuil: float = 0.6):
     model = YOLO(model_path)
     results = model.predict(source=image_path, conf=seuil, verbose=False)
 
-    if not results or len(results[0].boxes) == 0:
+    if not results:
+        print("❌ Aucune prédiction retournée par le modèle.")
+        return
+
+    res = results[0]
+    # Modèle de classification (probs)
+    if hasattr(res, "probs") and res.probs is not None:
+        probs = res.probs
+        top1_idx = int(probs.top1)
+        top1_conf = float(probs.top1conf)
+        top1_label = str(res.names.get(top1_idx, top1_idx))
+
+        top5_indices = list(getattr(probs, "top5", [top1_idx]))
+        top5_confs = list(getattr(probs, "top5conf", [top1_conf]))
+
+        print(f"\n✅ Classement YOLO Classification :")
+        for i, (idx, conf) in enumerate(zip(top5_indices, top5_confs)):
+            label = str(res.names.get(int(idx), int(idx)))
+            print(f"  [{i+1}] {label} — confiance : {float(conf):.2%}")
+
+        print(f"\n🏆 Meilleure prédiction : {top1_label} @ {top1_conf:.2%}")
+        if top1_conf < seuil:
+            print(f"⚠️  Score ({top1_conf:.2%}) < seuil ({seuil:.0%}) — détection refusée (non reconnue)")
+        return
+
+    # Modèle de détection (boxes)
+    if not hasattr(res, "boxes") or len(res.boxes) == 0:
         print("❌ Aucune clé détectée au-dessus du seuil de confiance.")
         return
 
-    boxes = results[0].boxes
+    boxes = res.boxes
     scores = boxes.conf.tolist()
     classes = boxes.cls.tolist()
 
     print(f"\n✅ {len(scores)} détection(s) :")
     for i, (cls_idx, score) in enumerate(zip(classes, scores)):
-        label = results[0].names[int(cls_idx)]
+        label = res.names[int(cls_idx)]
         print(f"  [{i+1}] {label} — confiance : {score:.2%}")
 
     best_idx = scores.index(max(scores))
-    best_label = results[0].names[int(classes[best_idx])]
+    best_label = res.names[int(classes[best_idx])]
     best_score = scores[best_idx]
     print(f"\n🏆 Meilleure détection : {best_label} @ {best_score:.2%}")
 

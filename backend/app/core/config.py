@@ -22,10 +22,21 @@ class Settings(BaseSettings):
     LED_MODE: str = "simulated"          # simulated | mqtt
     LED_DUREE_SECONDES: int = 15
 
-    # YOLO
-    YOLO_MODE: str = "mock"              # mock | inference
-    YOLO_MODEL_PATH: str = "yolo/weights/best.pt"
-    YOLO_SEUIL_CONFIANCE: float = 0.6
+    # YOLO & Reconnaissance
+    YOLO_MODE: str = "mock"                   # mock | real
+    YOLO_MODEL_PATH: str = "ml/best.pt"
+    YOLO_CONFIDENCE_THRESHOLD: float = 0.6
+    BLUR_THRESHOLD: float = 40.0
+
+    @property
+    def YOLO_SEUIL_CONFIANCE(self) -> float:
+        """Alias rétrocompatible vers YOLO_CONFIDENCE_THRESHOLD."""
+        return self.YOLO_CONFIDENCE_THRESHOLD
+
+    # Dataset & Photos de référence ML
+    UPLOAD_DIR: str = "uploads"
+    ML_DATASET_MIN_PHOTOS: int = 30
+    MAX_PHOTO_SIZE_BYTES: int = 5 * 1024 * 1024  # 5 Mo par photo
 
     # Serveur
     API_HOST: str = "0.0.0.0"

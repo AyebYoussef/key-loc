@@ -37,6 +37,7 @@ class Ebauche(Base):
     id = Column(Integer, primary_key=True, index=True)
     modele_id = Column(Integer, ForeignKey("modeles_cles.id"), nullable=False)
     casier_id = Column(Integer, ForeignKey("casiers.id"), nullable=False)
+    classe_yolo = Column(String(100), nullable=True)
     quantite = Column(Integer, default=0, nullable=False)
     seuil_alerte = Column(Integer, default=5, nullable=False)
     quantite_min = Column(Integer, default=0, nullable=False)
@@ -47,6 +48,12 @@ class Ebauche(Base):
     casier = relationship("Casier", back_populates="ebauches")
     mouvements = relationship("MouvementStock", back_populates="ebauche")
     scans = relationship("Scan", back_populates="ebauche")
+    photos = relationship(
+        "EbauchePhoto",
+        back_populates="ebauche",
+        cascade="all, delete-orphan",
+        order_by="EbauchePhoto.date_ajout.desc()",
+    )
 
     @property
     def statut_stock(self) -> str:
@@ -56,6 +63,34 @@ class Ebauche(Base):
         if self.quantite <= self.seuil_alerte:
             return "alerte"
         return "ok"
+
+    @property
+    def nb_photos(self) -> int:
+        """Retourne le nombre de photos de référence associées."""
+        return len(self.photos) if self.photos is not None else 0
+
+
+class EbauchePhoto(Base):
+    """Photo de référence associée à une ébauche pour l'entraînement YOLO."""
+    __tablename__ = "ebauche_photo"
+
+    id = Column(Integer, primary_key=True, index=True)
+    ebauche_id = Column(Integer, ForeignKey("ebauches.id", ondelete="CASCADE"), nullable=False, index=True)
+    chemin_fichier = Column(String(255), nullable=False)
+    source = Column(
+        Enum("catalogue", "telephone", "scan_confirme"),
+        default="catalogue",
+        nullable=False,
+    )
+    date_ajout = Column(DateTime, server_default=func.now())
+
+    ebauche = relationship("Ebauche", back_populates="photos")
+
+    @property
+    def url(self) -> str:
+        """Retourne l'URL relative publique servie par StaticFiles (/uploads/...)."""
+        chemin = (self.chemin_fichier or "").replace("\\", "/").lstrip("/")
+        return f"/{chemin}"
 
 
 class MouvementStock(Base):
@@ -103,7 +138,7 @@ class Scan(Base):
     modele_detecte_id = Column(Integer, ForeignKey("modeles_cles.id"), default=None)
     score_confiance = Column(Float, default=None)
     statut = Column(
-        Enum("succes", "echec_confiance", "echec_detection", "photo_floue"),
+        Enum("ok", "photo_floue", "non_reconnue", "modele_inexistant"),
         nullable=False,
     )
     ebauche_id = Column(Integer, ForeignKey("ebauches.id"), default=None)

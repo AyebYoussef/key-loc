@@ -1,7 +1,7 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ApiService } from '../../core/services/api.service';
-import { Casier } from '../../core/models/models';
+import { Casier, Ebauche } from '../../core/models/models';
 import { interval, Subscription } from 'rxjs';
 
 @Component({
@@ -13,7 +13,7 @@ import { interval, Subscription } from 'rxjs';
       <div class="page-header">
         <div>
           <h1>Grille des Casiers & Guidage Lumineux</h1>
-          <p class="subtitle">Simulation virtuelle du panneau de LED (WS2812B / V1) — Durée d'allumage : 15s</p>
+          <p class="subtitle">Simulation virtuelle du panneau de LED (WS2812B) — Emplacement et clés stockées par casier</p>
         </div>
         <div class="legend">
           <div class="legend-item"><span class="led-dot active"></span> LED Allumée</div>
@@ -32,12 +32,25 @@ import { interval, Subscription } from 'rxjs';
           <div class="casier-body">
             <span class="pos">Ligne {{ casier.ligne }} · Col {{ casier.colonne }}</span>
             <span class="led-index" *ngIf="casier.led_index !== null">Index LED: #{{ casier.led_index }}</span>
+
+            <!-- Clé stockée dans ce casier -->
+            <div class="ebauche-tag" *ngIf="getEbaucheForCasier(casier.id) as ebauche">
+              <span class="key-icon">🔑</span>
+              <div class="key-info">
+                <strong>{{ ebauche.modele.reference }}</strong>
+                <span class="qte">Stock : {{ ebauche.quantite }}</span>
+              </div>
+            </div>
+            <div class="empty-casier-tag" *ngIf="!getEbaucheForCasier(casier.id)">
+              <span class="empty-dot">○</span>
+              <span>Casier disponible</span>
+            </div>
           </div>
 
           <div class="casier-actions">
             <button class="btn btn-sm" [class.btn-primary]="!casier.etat_led?.actif" [class.btn-danger]="casier.etat_led?.actif"
                     (click)="toggleLed(casier)">
-              {{ casier.etat_led?.actif ? 'Éteindre' : 'Tester (15s)' }}
+              {{ casier.etat_led?.actif ? 'Éteindre' : 'Tester LED (15s)' }}
             </button>
           </div>
         </div>
@@ -98,31 +111,23 @@ import { interval, Subscription } from 'rxjs';
         border-color: #3b82f6;
         box-shadow: 0 0 25px rgba(59, 130, 246, 0.5);
         background: rgba(59, 130, 246, 0.05);
-        transform: translateY(-2px);
-      }
 
-      .casier-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-
-        .code {
-          font-size: 1.25rem;
-          font-weight: 800;
-          color: var(--text-primary);
+        .led-indicator {
+          background-color: #3b82f6;
+          box-shadow: 0 0 15px #3b82f6, 0 0 30px #3b82f6;
         }
       }
+    }
 
-      .casier-body {
-        display: flex;
-        flex-direction: column;
-        gap: 0.2rem;
-        font-size: 0.75rem;
-        color: var(--text-secondary);
-      }
+    .casier-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
 
-      .casier-actions {
-        margin-top: auto;
+      .code {
+        font-size: 1.2rem;
+        font-weight: 700;
+        color: var(--text-primary);
       }
     }
 
@@ -130,23 +135,68 @@ import { interval, Subscription } from 'rxjs';
       width: 14px;
       height: 14px;
       border-radius: 50%;
-      background: #94a3b8;
+      background-color: var(--border);
       transition: all 0.2s;
 
-      &.active, &.pulse {
-        background: #3b82f6;
-        box-shadow: 0 0 12px #3b82f6, 0 0 20px #3b82f6;
-        animation: blink 1.2s infinite ease-in-out;
-      }
-
-      &.inactive {
-        background: #cbd5e1;
+      &.active {
+        background-color: #3b82f6;
+        box-shadow: 0 0 8px #3b82f6;
       }
     }
 
-    @keyframes blink {
-      0%, 100% { opacity: 1; transform: scale(1); }
-      50% { opacity: 0.4; transform: scale(0.9); }
+    .pulse {
+      animation: pulse 1s infinite alternate;
+    }
+
+    @keyframes pulse {
+      0% { transform: scale(0.9); opacity: 0.8; }
+      100% { transform: scale(1.3); opacity: 1; }
+    }
+
+    .casier-body {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+      flex: 1;
+
+      .pos {
+        font-size: 0.8rem;
+        color: var(--text-secondary);
+      }
+
+      .led-index {
+        font-size: 0.75rem;
+        color: var(--text-muted);
+      }
+
+      .ebauche-tag {
+        margin-top: 0.4rem;
+        background: var(--primary-light);
+        border: 1px solid rgba(37, 99, 235, 0.2);
+        padding: 0.35rem 0.55rem;
+        border-radius: 6px;
+        display: flex;
+        align-items: center;
+        gap: 0.45rem;
+        font-size: 0.8rem;
+        .key-icon { font-size: 1rem; }
+        .key-info {
+          display: flex;
+          flex-direction: column;
+          line-height: 1.2;
+          strong { color: var(--primary); }
+          .qte { font-size: 0.7rem; color: var(--text-secondary); }
+        }
+      }
+
+      .empty-casier-tag {
+        margin-top: 0.4rem;
+        font-size: 0.75rem;
+        color: var(--text-muted);
+        display: flex;
+        align-items: center;
+        gap: 0.35rem;
+      }
     }
 
     .btn-sm {
@@ -158,12 +208,13 @@ import { interval, Subscription } from 'rxjs';
 })
 export class CasiersComponent implements OnInit, OnDestroy {
   casiers: Casier[] = [];
+  ebauches: Ebauche[] = [];
   pollSubscription?: Subscription;
 
   constructor(private api: ApiService) {}
 
   ngOnInit(): void {
-    this.chargerCasiers();
+    this.chargerDonnees();
     // Polling toutes les 2 secondes pour actualiser les LED virtuelles
     this.pollSubscription = interval(2000).subscribe(() => this.actualiserEtatsLed());
   }
@@ -172,13 +223,20 @@ export class CasiersComponent implements OnInit, OnDestroy {
     this.pollSubscription?.unsubscribe();
   }
 
-  chargerCasiers(): void {
+  chargerDonnees(): void {
     this.api.getCasiers().subscribe({
       next: (res) => {
         this.casiers = res;
         this.actualiserEtatsLed();
       }
     });
+    this.api.getEbauches().subscribe({
+      next: (res) => this.ebauches = res
+    });
+  }
+
+  getEbaucheForCasier(casierId: number): Ebauche | undefined {
+    return this.ebauches.find(e => e.casier_id === casierId);
   }
 
   actualiserEtatsLed(): void {
@@ -201,4 +259,3 @@ export class CasiersComponent implements OnInit, OnDestroy {
     }
   }
 }
-

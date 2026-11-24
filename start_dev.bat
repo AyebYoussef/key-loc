@@ -16,8 +16,8 @@ echo.
 echo ========================================================
 echo Les services sont en cours de démarrage :
 echo   - Backend API  : http://localhost:8000/docs
-echo   - Frontend Web : http://localhost:4200
-echo   - Mobile App   : Ouvrir 'mobile/' dans Android Studio
+echo   - Application  : http://localhost:4200 (PC ou Mobile)
+echo   - Accès Mobile : ouvrir http://localhost:4200 (ou http://^<IP_PC^>:4200 en Wi-Fi)
 echo ========================================================
 pause
 

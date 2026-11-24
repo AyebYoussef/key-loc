@@ -99,6 +99,7 @@ CREATE TABLE IF NOT EXISTS ebauches (
     id               INT AUTO_INCREMENT PRIMARY KEY,
     modele_id        INT NOT NULL,
     casier_id        INT NOT NULL,
+    classe_yolo      VARCHAR(100) NULL,        -- nom de classe/dossier YOLO (sans espaces ni accents)
     quantite         INT NOT NULL DEFAULT 0,
     seuil_alerte     INT NOT NULL DEFAULT 5,   -- alerte quand quantite <= seuil_alerte
     quantite_min     INT NOT NULL DEFAULT 0,   -- bloquant quand quantite <= quantite_min
@@ -107,6 +108,20 @@ CREATE TABLE IF NOT EXISTS ebauches (
     CONSTRAINT fk_ebauche_modele FOREIGN KEY (modele_id) REFERENCES modeles_cles(id),
     CONSTRAINT fk_ebauche_casier FOREIGN KEY (casier_id) REFERENCES casiers(id),
     CONSTRAINT uq_ebauche_modele_casier UNIQUE (modele_id, casier_id)
+) ENGINE=InnoDB;
+
+-- ============================================================
+-- TABLE : ebauche_photo
+-- Photos de référence pour l'entraînement YOLO (classification)
+-- ============================================================
+CREATE TABLE IF NOT EXISTS ebauche_photo (
+    id             INT AUTO_INCREMENT PRIMARY KEY,
+    ebauche_id     INT NOT NULL,
+    chemin_fichier VARCHAR(255) NOT NULL,
+    source         ENUM('catalogue', 'telephone', 'scan_confirme') NOT NULL DEFAULT 'catalogue',
+    date_ajout     DATETIME DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_ebauche_photo_ebauche
+        FOREIGN KEY (ebauche_id) REFERENCES ebauches(id) ON DELETE CASCADE
 ) ENGINE=InnoDB;
 
 -- ============================================================
@@ -137,7 +152,7 @@ CREATE TABLE IF NOT EXISTS scans (
     image_path          VARCHAR(255),          -- chemin de la photo uploadée
     modele_detecte_id   INT DEFAULT NULL,      -- NULL si échec détection
     score_confiance     FLOAT DEFAULT NULL,    -- score YOLO (0.0 à 1.0)
-    statut              ENUM('succes','echec_confiance','echec_detection','photo_floue') NOT NULL,
+    statut              ENUM('ok','photo_floue','non_reconnue','modele_inexistant') NOT NULL,
     ebauche_id          INT DEFAULT NULL,      -- ébauche proposée (si succès)
     guidage_active      BOOLEAN DEFAULT FALSE, -- LED virtuelle déclenchée
     created_at          DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -205,7 +220,10 @@ INSERT INTO modeles_cles (reference, libelle, fabricant_id, yolo_label, descript
 ('RR50',   'Errebi RR50 - Roto compatible',      2, 'RR50',   'Profil cylindre européen Roto'),
 ('JM1',    'JMA JM1 - Mul-T-Lock',               3, 'JM1',    'Profil haute sécurité Mul-T-Lock'),
 ('KL5',    'Keyline KL5 - Fichet compatible',    4, 'KL5',    'Profil français haute sécurité Fichet'),
-('LI2',    'Lisi LI2 - Dom compatible',          5, 'LI2',    'Profil européen Dom Plura');
+('LI2',    'Lisi LI2 - Dom compatible',          5, 'LI2',    'Profil européen Dom Plura'),
+('C8 208', 'C8 208 Original',                    1, 'C8 208', 'Clé profil C8 208'),
+('UE 11R', 'Silca UE 11R',                       1, 'UE 11R', 'Profil Silca UE 11R'),
+('UG 5D',  'Silca UG 5D',                        1, 'UG 5D',  'Profil Silca UG 5D');
 
 -- Équivalences
 INSERT INTO equivalences (modele_source_id, modele_equiv_id, note) VALUES
@@ -238,17 +256,20 @@ INSERT INTO casiers (code, ligne, colonne, led_index, description) VALUES
 ('D5', 4, 5, 19, 'Rangée D, colonne 5');
 
 -- Ébauches (stock initial)
-INSERT INTO ebauches (modele_id, casier_id, quantite, seuil_alerte, quantite_min) VALUES
-(1,  1,  25, 5, 2),   -- SX9    -> A1
-(2,  2,  18, 5, 2),   -- SX10   -> A2
-(3,  3,  30, 5, 2),   -- EU6P   -> A3
-(4,  4,  12, 5, 2),   -- TE2    -> A4
-(5,  5,   4, 5, 2),   -- JU3    -> A5 (alerte !)
-(6,  6,  22, 5, 2),   -- Y1     -> B1
-(7,  7,   2, 5, 2),   -- RR50   -> B2 (critique !)
-(8,  8,  15, 5, 2),   -- JM1    -> B3
-(9,  9,   0, 5, 2),   -- KL5    -> B4 (épuisé !)
-(10, 10,  8, 5, 2);   -- LI2    -> B5
+INSERT INTO ebauches (modele_id, casier_id, classe_yolo, quantite, seuil_alerte, quantite_min) VALUES
+(1,  1,  'SX9',  25, 5, 2),   -- SX9    -> A1
+(2,  2,  'SX10', 18, 5, 2),   -- SX10   -> A2
+(3,  3,  'EU6P', 30, 5, 2),   -- EU6P   -> A3
+(4,  4,  'TE2',  12, 5, 2),   -- TE2    -> A4
+(5,  5,  'JU3',   4, 5, 2),   -- JU3    -> A5 (alerte !)
+(6,  6,  'Y1',   22, 5, 2),   -- Y1     -> B1
+(7,  7,  'RR50',  2, 5, 2),   -- RR50   -> B2 (critique !)
+(8,  8,  'JM1',  15, 5, 2),   -- JM1    -> B3
+(9,  9,  'KL5',   0, 5, 2),   -- KL5    -> B4 (épuisé !)
+(10, 10, 'LI2',   8, 5, 2),   -- LI2    -> B5
+(11, 11, 'C8 208', 25, 5, 2), -- C8 208 -> C1
+(12, 12, 'UE 11R', 20, 5, 2), -- UE 11R -> C2
+(13, 13, 'UG 5D',  15, 5, 2); -- UG 5D  -> C3
 
 -- États LED (initialisés à éteint)
 INSERT INTO etats_led (casier_id, actif, expire_a)

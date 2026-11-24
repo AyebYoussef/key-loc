@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -128,7 +128,7 @@ import { AuthService } from '../../core/services/auth.service';
     }
   `]
 })
-export class LoginComponent {
+export class LoginComponent implements OnInit {
   loginForm: FormGroup;
   loading = false;
   errorMessage = '';
@@ -142,6 +142,12 @@ export class LoginComponent {
       email: ['jean.dupont@keylocator.fr', [Validators.required, Validators.email]],
       password: ['Password1!', Validators.required]
     });
+  }
+
+  ngOnInit(): void {
+    if (this.authService.isAuthenticated) {
+      this.router.navigate(['/dashboard']);
+    }
   }
 
   fillLogin(email: string): void {

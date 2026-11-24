@@ -44,12 +44,21 @@ print("\n--- 8. Dashboard Stats ---")
 r = client.get("/api/stats/dashboard", headers=headers)
 print("Stats:", r.json())
 
-print("\n--- 9. Scan Mock (sans photo réelle) ---")
+print("\n--- 9. Scan Mock (image nette générée) ---")
 import io
-dummy_img = io.BytesIO(b"\xff\xd8\xff\xe0" + b"\x00" * 200)  # faux JPEG
+from PIL import Image, ImageDraw
+img = Image.new("RGB", (200, 200), (255, 255, 255))
+draw = ImageDraw.Draw(img)
+for x in range(0, 200, 10):
+    draw.line([(x, 0), (x, 200)], fill=(0, 0, 0), width=3)
+dummy_img = io.BytesIO()
+img.save(dummy_img, format="JPEG")
+dummy_img.seek(0)
 files = {"photo": ("test.jpg", dummy_img, "image/jpeg")}
 r = client.post("/api/scans/", files=files, headers=headers)
 print("Scan résultat:", r.status_code, r.json()["statut"], "-", r.json()["message"])
+assert r.status_code == 200
+assert r.json()["statut"] in ("ok", "non_reconnue", "modele_inexistant")
 
 print("\n=======================================================")
 print("  ✅ TOUS LES TESTS FONCTIONNELS SONT PASSÉS AVEC SUCCÈS")

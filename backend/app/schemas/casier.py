@@ -64,6 +64,8 @@ class EbaucheCreate(EbaucheBase):
 
 
 class EbaucheUpdate(BaseModel):
+    casier_id: Optional[int] = None
+    modele_id: Optional[int] = None
     quantite: Optional[int] = Field(None, ge=0)
     seuil_alerte: Optional[int] = Field(None, ge=0)
     quantite_min: Optional[int] = Field(None, ge=0)
@@ -71,6 +73,8 @@ class EbaucheUpdate(BaseModel):
 
 class EbaucheSchema(EbaucheBase):
     id: int
+    classe_yolo: Optional[str] = None
+    nb_photos: int = 0
     statut_stock: str           # ok | alerte | epuise
     modele: ModeleSchema
     casier: CasierSchema
@@ -78,6 +82,47 @@ class EbaucheSchema(EbaucheBase):
     updated_at: datetime
 
     model_config = {"from_attributes": True}
+
+
+# ── Photos de référence (Dataset YOLO) ────────────────────────────────────────
+
+class EbauchePhotoSchema(BaseModel):
+    id: int
+    ebauche_id: int
+    chemin_fichier: str
+    url: str
+    source: str
+    date_ajout: datetime
+
+    model_config = {"from_attributes": True}
+
+
+class EbauchePhotosUploadResponse(BaseModel):
+    ebauche_id: int
+    classe_yolo: str
+    ajoutees: int
+    total_photos: int
+    photos: List[EbauchePhotoSchema]
+
+
+class DatasetModeleStatus(BaseModel):
+    ebauche_id: int
+    modele_id: int
+    reference: str
+    libelle: str
+    classe_yolo: str
+    nb_photos: int
+    seuil_requis: int
+    pret: bool
+    manquantes: int
+
+
+class DatasetStatusResponse(BaseModel):
+    seuil_requis: int
+    total_modeles: int
+    modeles_prets: int
+    total_photos: int
+    modeles: List[DatasetModeleStatus]
 
 
 # ── Mouvement de stock ────────────────────────────────────────────────────────
@@ -109,12 +154,18 @@ class MouvementSchema(BaseModel):
 
 # ── Scan ──────────────────────────────────────────────────────────────────────
 
+class TopPredictionSchema(BaseModel):
+    classe: str
+    confiance: float
+
+
 class ScanResultat(BaseModel):
     """Réponse du POST /api/scans/"""
-    statut: str                           # succes | echec_confiance | echec_detection | photo_floue
+    statut: str                           # ok | photo_floue | non_reconnue | modele_inexistant
     message: str
     modele: Optional[ModeleSchema] = None
     score_confiance: Optional[float] = None
+    top3: Optional[List[TopPredictionSchema]] = None
     ebauche: Optional[EbaucheSchema] = None
     casier: Optional[CasierSchema] = None
     equivalences: Optional[List[ModeleSchema]] = None
@@ -133,6 +184,43 @@ class ScanSchema(BaseModel):
     created_at: datetime
 
     model_config = {"from_attributes": True}
+
+
+# ── Administration ML ─────────────────────────────────────────────────────────
+
+class MlStatusResponse(BaseModel):
+    mode: str
+    modele_charge: bool
+    chemin_modele: str
+    erreur_chargement: Optional[str] = None
+    classes: List[str] = []
+    nb_classes: int = 0
+    date_modele: Optional[datetime] = None
+    seuil_confiance: float
+    seuil_nettete: float
+
+
+class MlReloadResponse(BaseModel):
+    succes: bool
+    message: str
+    status: MlStatusResponse
+
+
+class MlCoherenceBaseItem(BaseModel):
+    ebauche_id: int
+    reference: str
+    classe_yolo: str
+
+
+class MlCoherenceResponse(BaseModel):
+    mode: str
+    modele_charge: bool
+    coherent: bool
+    classes_modele: List[str] = []
+    classes_base: List[str] = []
+    classes_communes: List[str] = []
+    classes_modele_absentes_base: List[str] = []
+    modeles_base_absents_modele: List[MlCoherenceBaseItem] = []
 
 
 # ── LED virtuelle ─────────────────────────────────────────────────────────────
